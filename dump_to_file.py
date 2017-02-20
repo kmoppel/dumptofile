@@ -11,10 +11,11 @@ data thats currently in the scrollback buffer.(so better increase the default bu
 
 import os
 import sys
-import gtk
+from gi.repository import Gtk
 import terminatorlib.plugin as plugin
 from terminatorlib.translation import _
 import datetime
+
 
 AVAILABLE = ['DumpToFile']
 
@@ -31,7 +32,7 @@ class DumpToFile(plugin.MenuItem):
         """ Add dump-to-file command to the terminal menu """
         vte_terminal = terminal.get_vte()
         if not self.dumpers.has_key(vte_terminal):
-            item = gtk.MenuItem(_('Dump terminal to file'))
+            item = Gtk.MenuItem.new_with_mnemonic(_('D_ump terminal to file'))
             item.connect("activate", self.dump_console, terminal)
         menuitems.append(item)
                         
@@ -46,7 +47,8 @@ class DumpToFile(plugin.MenuItem):
             vte_terminal = Terminal.get_vte()
             col, row = vte_terminal.get_cursor_position()
             content = vte_terminal.get_text_range(0, 0, row, col, lambda *a: True)
-            fd.write(content.strip() + "\n")
-            fd.flush()
+            if content:
+                fd.write(content[0])
+                fd.flush()
         except Exception as e:
             print e
