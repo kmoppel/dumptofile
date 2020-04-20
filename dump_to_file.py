@@ -30,7 +30,7 @@ class DumpToFile(plugin.MenuItem):
     def callback(self, menuitems, menu, terminal):
         """ Add dump-to-file command to the terminal menu """
         vte_terminal = terminal.get_vte()
-        if not self.dumpers.has_key(vte_terminal):
+        if vte_terminal not in self.dumpers:
             item = gtk.MenuItem(_('Dump terminal to file'))
             item.connect("activate", self.dump_console, terminal)
         menuitems.append(item)
@@ -49,4 +49,4 @@ class DumpToFile(plugin.MenuItem):
             fd.write(content.strip() + "\n")
             fd.flush()
         except Exception as e:
-            print e
+            print(e)
