@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Plugin by Kaarel Moppel <kaarel.moppel@gmail.com>
 # See LICENSE of Terminator package.
