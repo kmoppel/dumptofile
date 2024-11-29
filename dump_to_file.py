@@ -8,10 +8,13 @@ data thats currently in the scrollback buffer.(so better increase the default bu
 """
 
 import os
-from gi.repository import Gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Vte
 import terminatorlib.plugin as plugin
 from terminatorlib.translation import _
 import datetime
+from terminatorlib.util import dbg
 
 AVAILABLE = ['DumpToFile']
 
@@ -40,9 +43,14 @@ class DumpToFile(plugin.MenuItem):
             if not os.path.exists(log_folder):
                 os.mkdir(log_folder)
             log_file = "console_" + datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S') + ".log"
-            vte_terminal = Terminal.get_vte()
-            col, row = vte_terminal.get_cursor_position()
-            content = vte_terminal.get_text_range(0, 0, row, col, lambda *a: True)
+            vte = Terminal.get_vte()
+            dbg("Terminal.get_vte(): %s" % vte)
+            dbg("Vte.get_minor_version(): %s" % Vte.get_minor_version())
+            col, row = vte.get_cursor_position()
+            if Vte.get_minor_version() < 72:
+                content = vte.get_text_range(0, 0, row, col, lambda *a: True)
+            else:
+                content = vte.get_text_range_format(Vte.Format.TEXT, 0, 0, row, col)
             if content:
                 fd = open(os.path.join(log_folder, log_file), 'w+')
                 fd.write(content[0])
