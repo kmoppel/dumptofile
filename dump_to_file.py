@@ -9,6 +9,7 @@ data thats currently in the scrollback buffer.(so better increase the default bu
 
 import os
 import gi
+gi.require_version('Vte', '2.91')
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Vte
 import terminatorlib.plugin as plugin
@@ -42,20 +43,28 @@ class DumpToFile(plugin.MenuItem):
     def dump_console(self, _widget, Terminal):
         """ Handle menu item callback by saving console text to a predefined location and creating the ~/.terminator folder if necessary """
         try:
-            log_folder = os.path.join(os.path.expanduser("~"), ".terminator")
-            if not os.path.exists(log_folder):
-                os.mkdir(log_folder)
-            log_file = "console_" + datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S') + ".log"
-            vte = Terminal.get_vte()
-            dbg("Terminal.get_vte(): %s" % vte)
-            col, row = vte.get_cursor_position()
-            if self.vte_minor_version and self.vte_minor_version < 72:
-                content = vte.get_text_range(0, 0, row, col, lambda *a: True)
-            else:
-                content = vte.get_text_range_format(Vte.Format.TEXT, 0, 0, row, col)
-            if content and content[0]:
-                fd = open(os.path.join(log_folder, log_file), 'w+')
-                fd.write(content[0])
-                fd.flush()
+            save_dialog = Gtk.FileChooserDialog(title=_("Save log"),
+                                           action=Gtk.FileChooserAction.SAVE,
+                                           buttons=(_("_Cancel"), Gtk.ResponseType.CANCEL, _("_Save"), Gtk.ResponseType.OK))
+            save_dialog.set_transient_for(_widget.get_toplevel())
+            save_dialog.set_do_overwrite_confirmation(True)
+            save_dialog.set_local_only(True)
+            save_dialog.show_all()
+            response = save_dialog.run()
+            if response == Gtk.ResponseType.OK:
+                vte = Terminal.get_vte()
+                dbg("Terminal.get_vte(): %s" % vte)
+                col, row = vte.get_cursor_position()
+                if self.vte_minor_version and self.vte_minor_version < 72:
+                    content = vte.get_text_range(0, 0, row, col, lambda *a: True)
+                else:
+                    content = vte.get_text_range_format(Vte.Format.TEXT, 0, 0, row, col)
+                if content and content[0]:
+                    fd = open(os.path.join(save_dialog.get_current_folder(), save_dialog.get_filename()), 'w+')
+                    fd.write(content[0])
+                    fd.flush()
+
+            save_dialog.destroy()
+
         except Exception as e:
             print(e)
